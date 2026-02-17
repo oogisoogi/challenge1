@@ -8,7 +8,7 @@
 [Supabase Auth 계정 생성]
         │
         ▼
-  profiles INSERT (id=auth.uid, role, name, phone)
+  profiles INSERT (id=auth.uid, role, name, phone, bio)
         │
         ▼
   terms_agreements INSERT (user_id, agreed_at)
@@ -20,8 +20,9 @@
   courses SELECT (status=published, 카테고리/난이도 필터, 정렬)
         │
         ▼
-  enrollments INSERT (course_id, learner_id, status=active)
-        │  ── 중복 신청 불가: UNIQUE(course_id, learner_id) + status 체크
+  enrollments UPSERT (course_id, learner_id, status=active)
+        │  ── ON CONFLICT (course_id, learner_id) DO UPDATE SET status='active'
+        │  ── 취소 후 재수강 시 기존 레코드 재활성화
         ▼
   enrollments UPDATE (status=cancelled)  ── 수강취소
 ```
@@ -92,7 +93,7 @@
 ### 1-10. 제출물 채점 & 피드백
 
 ```
-  submissions UPDATE
+  submissions UPDATE  ── "채점 완료" 버튼 클릭 시점에만 DB 반영 (임시 저장 없음)
         │
         ├─ 점수 입력 → score=0~100, feedback, status=graded, graded_at=now()
         └─ 재제출 요청 → status=resubmission_required, feedback
@@ -143,6 +144,7 @@ CREATE TYPE report_action AS ENUM ('warning', 'invalidate_submission', 'restrict
 | role | user_role | NOT NULL | 역할 |
 | name | text | NOT NULL | 이름 |
 | phone | text | NOT NULL | 휴대폰번호 |
+| bio | text | NOT NULL DEFAULT '' | 소개/약력 (주로 Instructor용) |
 | created_at | timestamptz | NOT NULL DEFAULT now() | |
 | updated_at | timestamptz | NOT NULL DEFAULT now() | 트리거 자동 갱신 |
 
@@ -353,3 +355,11 @@ $$ LANGUAGE plpgsql;
 ```
 
 적용 대상: `profiles`, `categories`, `difficulty_levels`, `courses`, `enrollments`, `assignments`, `submissions`, `reports`
+
+---
+
+## 7. 콘텐츠 포맷 & 운영 규칙
+
+- **Markdown 지원 필드**: `courses.description`, `courses.curriculum`, `assignments.description`, `submissions.content`, `profiles.bio` — 클라이언트에서 Markdown 렌더링 적용.
+- **채점 반영 시점**: `submissions`의 `score`, `feedback`, `status` 변경은 강사의 "채점 완료" 버튼 클릭 시에만 단일 UPDATE로 반영한다. 임시 저장 없음.
+- **재수강(UPSERT)**: `enrollments`는 `UNIQUE(course_id, learner_id)` 제약 하에 `ON CONFLICT DO UPDATE SET status='active'`로 처리하여 취소 후 재수강을 지원한다.
