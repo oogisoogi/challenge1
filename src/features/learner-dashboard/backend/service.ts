@@ -80,11 +80,11 @@ export const getLearnerDashboard = async (
     return failure(500, dashboardErrorCodes.fetchError, assignError.message);
   }
 
-  const totalByCoursId = new Map<string, number>();
+  const totalByCourseId = new Map<string, number>();
   for (const a of allAssignments ?? []) {
-    totalByCoursId.set(
+    totalByCourseId.set(
       a.course_id,
-      (totalByCoursId.get(a.course_id) ?? 0) + 1,
+      (totalByCourseId.get(a.course_id) ?? 0) + 1,
     );
   }
 
@@ -118,7 +118,7 @@ export const getLearnerDashboard = async (
     .filter((r) => r.courses !== null)
     .map((r) => {
       const c = r.courses!;
-      const total = totalByCoursId.get(r.course_id) ?? 0;
+      const total = totalByCourseId.get(r.course_id) ?? 0;
       const completed = completedByCourseId.get(r.course_id) ?? 0;
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -158,7 +158,7 @@ export const getLearnerDashboard = async (
   const upcomingRows = (upcomingRaw ?? []) as unknown as RawUpcoming[];
   const upcomingIds = upcomingRows.map((a) => a.id);
 
-  let submissionStatusMap = new Map<string, string>();
+  const submissionStatusMap = new Map<string, string>();
 
   if (upcomingIds.length > 0) {
     const { data: subs } = await supabase

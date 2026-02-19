@@ -1,8 +1,7 @@
 import type { Hono } from 'hono';
 import { failure, respond } from '@/backend/http/response';
 import { getSupabase, type AppEnv } from '@/backend/hono/context';
-import { extractUserId } from '@/backend/http/auth';
-import { requireLearnerRole } from '@/backend/http/auth';
+import { extractUserId, requireLearnerRole } from '@/backend/http/auth';
 import { dashboardErrorCodes } from './error';
 import { getLearnerDashboard } from './service';
 
