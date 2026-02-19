@@ -59,13 +59,11 @@ export const getCourses = async (
     builder = builder.eq('difficulty_id', difficultyId);
   }
 
-  if (sort === 'latest') {
-    builder = builder.order('created_at', { ascending: false });
-  } else {
-    builder = builder.order('created_at', { ascending: false });
-  }
+  builder = builder.order('created_at', { ascending: false });
 
-  builder = builder.range(from, to);
+  if (sort === 'latest') {
+    builder = builder.range(from, to);
+  }
 
   const { data, error, count: total } = await builder;
 
@@ -99,6 +97,13 @@ export const getCourses = async (
 
   if (sort === 'popular') {
     courses.sort((a, b) => b.enrollmentCount - a.enrollmentCount);
+    const paginated = courses.slice(from, from + limit);
+    return success({
+      courses: paginated,
+      total: total ?? 0,
+      page,
+      limit,
+    });
   }
 
   return success({
