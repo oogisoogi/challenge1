@@ -4,11 +4,10 @@ import {
   respond,
 } from '@/backend/http/response';
 import {
-  getLogger,
   getSupabase,
-  type AppContext,
   type AppEnv,
 } from '@/backend/hono/context';
+import { extractUserId } from '@/backend/http/auth';
 import { courseListQuerySchema, courseIdParamSchema } from './schema';
 import {
   getCourses,
@@ -18,41 +17,6 @@ import {
   getCourseMeta,
 } from './service';
 import { courseErrorCodes } from './error';
-
-const extractUserId = async (
-  c: AppContext,
-): Promise<string | null> => {
-  const supabase = getSupabase(c);
-  const logger = getLogger(c);
-
-  const authHeader = c.req.header('Authorization');
-
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7);
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      logger.warn('Course auth failed via Bearer token');
-      return null;
-    }
-
-    return user.id;
-  }
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user.id;
-};
 
 export const registerCourseRoutes = (app: Hono<AppEnv>) => {
   // GET /api/courses/meta — 필터 메타데이터 (must be before :courseId)

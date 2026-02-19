@@ -4,10 +4,10 @@ import {
   respond,
 } from '@/backend/http/response';
 import {
-  getLogger,
   getSupabase,
   type AppEnv,
 } from '@/backend/hono/context';
+import { extractUserId } from '@/backend/http/auth';
 import { signupRequestSchema, onboardingRequestSchema } from './schema';
 import { signUpUser, completeOnboarding } from './service';
 import { authErrorCodes } from './error';
@@ -38,33 +38,14 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
 
   app.post('/api/auth/onboarding', async (c) => {
     const supabase = getSupabase(c);
-    const logger = getLogger(c);
 
-    const authHeader = c.req.header('Authorization');
-    let userId: string | null = null;
-
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.slice(7);
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-
-      if (error || !user) {
-        logger.warn('Onboarding auth failed via Bearer token');
-      } else {
-        userId = user.id;
-      }
-    }
+    const userId = await extractUserId(c);
 
     if (!userId) {
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        return respond(
-          c,
-          failure(401, authErrorCodes.unauthorized, '인증이 필요합니다.'),
-        );
-      }
-
-      userId = user.id;
+      return respond(
+        c,
+        failure(401, authErrorCodes.unauthorized, '인증이 필요합니다.'),
+      );
     }
 
     const body = await c.req.json();
