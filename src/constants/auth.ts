@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup"] as const;
+const PUBLIC_PATHS = ["/login", "/signup"] as const;
 const PUBLIC_PREFIXES = ["/_next", "/api", "/favicon", "/static", "/docs", "/images"] as const;
 
 export const LOGIN_PATH = "/login";
