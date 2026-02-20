@@ -10,18 +10,6 @@ export const signupRequestSchema = z.object({
     .min(PASSWORD_MIN_LENGTH, {
       message: `비밀번호는 ${PASSWORD_MIN_LENGTH}자 이상이어야 합니다.`,
     }),
-});
-
-export type SignupRequest = z.infer<typeof signupRequestSchema>;
-
-export const signupResponseSchema = z.object({
-  uid: z.string().uuid(),
-  redirectTo: z.string(),
-});
-
-export type SignupResponse = z.infer<typeof signupResponseSchema>;
-
-export const onboardingRequestSchema = z.object({
   role: z.enum(['learner', 'instructor'], {
     errorMap: () => ({ message: '역할은 learner 또는 instructor만 선택 가능합니다.' }),
   }),
@@ -35,13 +23,14 @@ export const onboardingRequestSchema = z.object({
   }),
 });
 
-export type OnboardingRequest = z.infer<typeof onboardingRequestSchema>;
+export type SignupRequest = z.infer<typeof signupRequestSchema>;
 
-export const onboardingResponseSchema = z.object({
+export const signupResponseSchema = z.object({
+  uid: z.string().uuid(),
   redirectTo: z.string(),
 });
 
-export type OnboardingResponse = z.infer<typeof onboardingResponseSchema>;
+export type SignupResponse = z.infer<typeof signupResponseSchema>;
 
 export const profileRowSchema = z.object({
   id: z.string().uuid(),

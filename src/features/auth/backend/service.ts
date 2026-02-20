@@ -5,7 +5,7 @@ import {
   type HandlerResult,
 } from '@/backend/http/response';
 import { authErrorCodes, type AuthServiceError } from './error';
-import type { SignupResponse, OnboardingResponse, ProfileRow } from './schema';
+import type { SignupResponse, ProfileRow } from './schema';
 
 const PROFILES_TABLE = 'profiles';
 const TERMS_AGREEMENTS_TABLE = 'terms_agreements';
@@ -15,11 +15,16 @@ const ROLE_REDIRECT_MAP: Record<string, string> = {
   instructor: '/instructor/dashboard',
 };
 
-const ONBOARDING_PATH = '/onboarding';
-
 export const signUpUser = async (
   supabase: SupabaseClient,
-  params: { email: string; password: string },
+  params: {
+    email: string;
+    password: string;
+    role: 'learner' | 'instructor';
+    name: string;
+    phone: string;
+    bio: string;
+  },
 ): Promise<HandlerResult<SignupResponse, AuthServiceError>> => {
   const { data, error } = await supabase.auth.admin.createUser({
     email: params.email,
@@ -56,40 +61,12 @@ export const signUpUser = async (
     );
   }
 
-  return success({
-    uid: data.user.id,
-    redirectTo: ONBOARDING_PATH,
-  });
-};
-
-export const completeOnboarding = async (
-  supabase: SupabaseClient,
-  params: {
-    userId: string;
-    role: 'learner' | 'instructor';
-    name: string;
-    phone: string;
-    bio: string;
-  },
-): Promise<HandlerResult<OnboardingResponse, AuthServiceError>> => {
-  const { data: existingProfile } = await supabase
-    .from(PROFILES_TABLE)
-    .select('id')
-    .eq('id', params.userId)
-    .maybeSingle();
-
-  if (existingProfile) {
-    return failure(
-      409,
-      authErrorCodes.onboardingProfileExists,
-      '이미 프로필이 존재합니다.',
-    );
-  }
+  const userId = data.user.id;
 
   const { error: profileError } = await supabase
     .from(PROFILES_TABLE)
     .insert({
-      id: params.userId,
+      id: userId,
       role: params.role,
       name: params.name,
       phone: params.phone,
@@ -107,7 +84,7 @@ export const completeOnboarding = async (
   const { error: termsError } = await supabase
     .from(TERMS_AGREEMENTS_TABLE)
     .insert({
-      user_id: params.userId,
+      user_id: userId,
     });
 
   if (termsError) {
@@ -120,7 +97,10 @@ export const completeOnboarding = async (
 
   const redirectTo = ROLE_REDIRECT_MAP[params.role] ?? '/';
 
-  return success({ redirectTo });
+  return success({
+    uid: userId,
+    redirectTo,
+  });
 };
 
 export const getProfileByUserId = async (
