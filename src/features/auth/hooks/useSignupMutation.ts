@@ -12,20 +12,25 @@ import {
 } from '@/features/auth/lib/dto';
 
 const signupFetcher = async (params: SignupRequest): Promise<SignupResponse> => {
-  const { data } = await apiClient.post('/api/auth/signup', params);
-  const result = signupResponseSchema.parse(data);
+  try {
+    const { data } = await apiClient.post('/api/auth/signup', params);
+    const result = signupResponseSchema.parse(data);
 
-  const supabase = getSupabaseBrowserClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email: params.email,
-    password: params.password,
-  });
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: params.email,
+      password: params.password,
+    });
 
-  if (error) {
-    throw new Error('세션 생성에 실패했습니다.');
+    if (error) {
+      throw new Error('세션 생성에 실패했습니다.');
+    }
+
+    return result;
+  } catch (error) {
+    const message = extractApiErrorMessage(error, '회원가입에 실패했습니다.');
+    throw new Error(message);
   }
-
-  return result;
 };
 
 export const useSignupMutation = () => {
@@ -37,10 +42,6 @@ export const useSignupMutation = () => {
     onSuccess: async (data) => {
       await refresh();
       router.replace(data.redirectTo);
-    },
-    onError: (error) => {
-      const message = extractApiErrorMessage(error, '회원가입에 실패했습니다.');
-      throw new Error(message);
     },
   });
 };

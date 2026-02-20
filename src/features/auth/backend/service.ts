@@ -33,9 +33,11 @@ export const signUpUser = async (
   });
 
   if (error) {
+    const errorMsg = error.message?.toLowerCase() ?? '';
     const isDuplicate =
-      error.message?.toLowerCase().includes('already registered') ||
-      error.message?.toLowerCase().includes('already been registered') ||
+      errorMsg.includes('already') ||
+      errorMsg.includes('duplicate') ||
+      errorMsg.includes('unique') ||
       error.status === 422;
 
     if (isDuplicate) {
