@@ -9,6 +9,7 @@ import { registerLearnerDashboardRoutes } from "@/features/learner-dashboard/bac
 import { registerInstructorDashboardRoutes } from "@/features/instructor-dashboard/backend/route";
 import { registerCourseManagementRoutes } from "@/features/course-management/backend/route";
 import { registerAssignmentManagementRoutes } from "@/features/assignment-management/backend/route";
+import { registerOperatorRoutes } from "@/features/operator/backend/route";
 import { registerAssignmentDetailRoutes } from "@/features/assignment-detail/backend/route";
 import { registerGradesRoutes } from "@/features/grades/backend/route";
 import type { AppEnv } from "@/backend/hono/context";
@@ -32,6 +33,7 @@ export const createHonoApp = () => {
   registerInstructorDashboardRoutes(app);
   registerCourseManagementRoutes(app);
   registerAssignmentManagementRoutes(app);
+  registerOperatorRoutes(app);
   registerAssignmentDetailRoutes(app);
   registerGradesRoutes(app);
   registerExampleRoutes(app);

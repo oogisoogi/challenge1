@@ -82,3 +82,24 @@ export const requireInstructorRole = async (
 
   return null;
 };
+
+export const requireOperatorRole = async (
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<ErrorResult<string> | null> => {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (profile?.role !== 'operator') {
+    return failure(
+      403,
+      'FORBIDDEN_ROLE',
+      '운영 권한이 필요합니다.',
+    );
+  }
+
+  return null;
+};
