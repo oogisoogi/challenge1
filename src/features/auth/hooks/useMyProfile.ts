@@ -22,6 +22,7 @@ export const useMyProfile = () => {
     queryKey: ['auth', 'me', 'profile'],
     queryFn: fetchMyProfile,
     enabled: isAuthenticated,
+    retry: false,
     staleTime: 5 * 60 * 1000,
   });
 };

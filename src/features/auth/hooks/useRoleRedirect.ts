@@ -1,32 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROLE_REDIRECT_MAP } from '@/features/auth/constants';
+import { useCurrentUser } from './useCurrentUser';
 import { useMyProfile } from './useMyProfile';
 
-export const useRoleRedirect = () => {
+type RoleRedirectState = {
+  status: 'loading' | 'redirecting' | 'error';
+  errorMessage?: string;
+};
+
+export const useRoleRedirect = (): RoleRedirectState => {
   const router = useRouter();
-  const { data: profile, isLoading, isError } = useMyProfile();
-  const [isRedirecting, setIsRedirecting] = useState(true);
+  const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
+  const { data: profile, isLoading: isProfileLoading, isError, error } = useMyProfile();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isAuthLoading) return;
 
-    if (isError || !profile) {
+    if (!isAuthenticated) {
       router.replace('/login');
       return;
     }
+
+    if (isProfileLoading) return;
+
+    if (isError || !profile) return;
 
     const targetPath =
       ROLE_REDIRECT_MAP[profile.role as keyof typeof ROLE_REDIRECT_MAP];
 
     if (targetPath) {
       router.replace(targetPath);
-    } else {
-      router.replace('/login');
     }
-  }, [isLoading, isError, profile, router]);
+  }, [isAuthLoading, isAuthenticated, isProfileLoading, isError, profile, router]);
 
-  return { isRedirecting: isRedirecting && isLoading };
+  if (isAuthLoading || isProfileLoading) {
+    return { status: 'loading' };
+  }
+
+  if (isError || !profile) {
+    return {
+      status: 'error',
+      errorMessage: error instanceof Error ? error.message : '프로필을 불러올 수 없습니다.',
+    };
+  }
+
+  return { status: 'redirecting' };
 };
