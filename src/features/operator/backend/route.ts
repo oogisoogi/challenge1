@@ -7,6 +7,7 @@ import {
   reportsQuerySchema,
   updateReportBodySchema,
   reportIdParamSchema,
+  createReportBodySchema,
   createCategoryBodySchema,
   updateCategoryBodySchema,
   categoryIdParamSchema,
@@ -19,6 +20,7 @@ import {
   getReports,
   getReport,
   updateReport,
+  createReport,
   getCategories,
   createCategory,
   updateCategory,
@@ -28,6 +30,31 @@ import {
 } from './service';
 
 export const registerOperatorRoutes = (app: Hono<AppEnv>) => {
+  // POST /api/reports — 신고 접수 (인증된 모든 사용자)
+  app.post('/api/reports', async (c) => {
+    const userId = await extractUserId(c);
+    if (!userId) {
+      return respond(c, failure(401, operatorErrorCodes.unauthorized, '인증이 필요합니다.'));
+    }
+
+    const supabase = getSupabase(c);
+
+    const bodyResult = createReportBodySchema.safeParse(await c.req.json());
+    if (!bodyResult.success) {
+      return respond(
+        c,
+        failure(
+          400,
+          operatorErrorCodes.validationError,
+          bodyResult.error.errors[0]?.message ?? '유효하지 않은 요청입니다.',
+        ),
+      );
+    }
+
+    const result = await createReport(supabase, userId, bodyResult.data);
+    return respond(c, result);
+  });
+
   // GET /api/operator/dashboard — 운영 현황 통계 (MS-1)
   app.get('/api/operator/dashboard', async (c) => {
     const userId = await extractUserId(c);

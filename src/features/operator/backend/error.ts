@@ -9,6 +9,8 @@ export const operatorErrorCodes = {
   duplicateName: 'OPERATOR_DUPLICATE_NAME',
   fetchError: 'OPERATOR_FETCH_ERROR',
   updateFailed: 'OPERATOR_UPDATE_FAILED',
+  createFailed: 'OPERATOR_CREATE_FAILED',
+  duplicateReport: 'OPERATOR_DUPLICATE_REPORT',
 } as const;
 
 type OperatorErrorValue =

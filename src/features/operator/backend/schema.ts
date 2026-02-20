@@ -59,6 +59,23 @@ export const updateReportBodySchema = z.object({
 
 export type UpdateReportBody = z.infer<typeof updateReportBodySchema>;
 
+export const createReportBodySchema = z.object({
+  targetType: z.enum(['course', 'assignment', 'submission', 'user'], {
+    required_error: '신고 대상 유형을 선택해주세요.',
+  }),
+  targetId: z.string().uuid({ message: '유효한 대상 ID가 필요합니다.' }),
+  reason: z.string().min(1, { message: '신고 사유를 입력해주세요.' }),
+  content: z.string().optional().default(''),
+});
+
+export type CreateReportBody = z.infer<typeof createReportBodySchema>;
+
+export const createReportResponseSchema = z.object({
+  report: reportSchema,
+});
+
+export type CreateReportResponse = z.infer<typeof createReportResponseSchema>;
+
 export const reportIdParamSchema = z.object({
   reportId: z.string().uuid(),
 });

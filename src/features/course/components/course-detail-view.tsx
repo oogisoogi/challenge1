@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { CourseDetailResponse } from '@/features/course/lib/dto';
 import { format } from 'date-fns';
+import { ReportDialog } from '@/features/operator/components/report-dialog';
 
 type CourseDetailViewProps = {
   course: CourseDetailResponse | undefined;
@@ -53,7 +54,10 @@ export const CourseDetailView = ({
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-3">
-        <h1 className="text-3xl font-bold">{course.title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-3xl font-bold">{course.title}</h1>
+          <ReportDialog targetType="course" targetId={course.id} />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {course.categoryName && (
             <Badge variant="secondary">{course.categoryName}</Badge>

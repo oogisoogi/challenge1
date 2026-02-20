@@ -9,6 +9,7 @@ export const courseErrorCodes = {
   enrollFailed: 'COURSE_ENROLL_FAILED',
   cancelFailed: 'COURSE_CANCEL_FAILED',
   validationError: 'COURSE_VALIDATION_ERROR',
+  courseArchived: 'COURSE_ARCHIVED',
 } as const;
 
 type CourseErrorValue = (typeof courseErrorCodes)[keyof typeof courseErrorCodes];

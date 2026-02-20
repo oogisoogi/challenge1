@@ -231,6 +231,14 @@ export const enrollCourse = async (
     return failure(404, courseErrorCodes.notFound, '코스를 찾을 수 없습니다.');
   }
 
+  if (course.status === 'archived') {
+    return failure(
+      400,
+      courseErrorCodes.courseArchived,
+      '보관된 코스는 수강신청할 수 없습니다.',
+    );
+  }
+
   if (course.status !== 'published') {
     return failure(
       400,

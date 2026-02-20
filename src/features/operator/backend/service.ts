@@ -6,6 +6,8 @@ import type {
   ReportsResponse,
   ReportDetailResponse,
   UpdateReportBody,
+  CreateReportBody,
+  CreateReportResponse,
   CategoriesResponse,
   CategoryResponse,
   CreateCategoryBody,
@@ -618,4 +620,78 @@ export const updateDifficultyLevel = async (
       updatedAt: d.updated_at,
     },
   });
+};
+
+// ---------------------------------------------------------------------------
+// createReport — 신고 접수 (모든 인증 사용자)
+// ---------------------------------------------------------------------------
+
+export const createReport = async (
+  supabase: SupabaseClient,
+  userId: string,
+  body: CreateReportBody,
+): Promise<HandlerResult<CreateReportResponse, OperatorServiceError>> => {
+  const { data, error } = await supabase
+    .from('reports')
+    .insert({
+      reporter_id: userId,
+      target_type: body.targetType,
+      target_id: body.targetId,
+      reason: body.reason,
+      content: body.content ?? '',
+      status: 'received',
+    })
+    .select(`
+      id,
+      reporter_id,
+      target_type,
+      target_id,
+      reason,
+      content,
+      status,
+      action,
+      created_at,
+      updated_at,
+      profiles!reports_reporter_id_fkey ( name )
+    `)
+    .single();
+
+  if (error) {
+    return failure(500, operatorErrorCodes.createFailed, error.message);
+  }
+
+  type RawReport = {
+    id: string;
+    reporter_id: string;
+    target_type: 'course' | 'assignment' | 'submission' | 'user';
+    target_id: string;
+    reason: string;
+    content: string;
+    status: 'received' | 'investigating' | 'resolved';
+    action: 'warning' | 'invalidate_submission' | 'restrict_account' | null;
+    created_at: string;
+    updated_at: string;
+    profiles: { name: string } | null;
+  };
+
+  const r = data as unknown as RawReport;
+
+  return success(
+    {
+      report: {
+        id: r.id,
+        reporterId: r.reporter_id,
+        reporterName: r.profiles?.name ?? '',
+        targetType: r.target_type,
+        targetId: r.target_id,
+        reason: r.reason,
+        content: r.content,
+        status: r.status,
+        action: r.action,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      },
+    },
+    201,
+  );
 };
