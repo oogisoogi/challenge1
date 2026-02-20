@@ -10,21 +10,22 @@ import {
   type SignupRequest,
   type SignupResponse,
 } from '@/features/auth/lib/dto';
-import { ONBOARDING_PATH } from '@/features/auth/constants';
 
 const signupFetcher = async (params: SignupRequest): Promise<SignupResponse> => {
-  const supabase = getSupabaseBrowserClient();
+  const { data } = await apiClient.post('/api/auth/signup', params);
+  const result = signupResponseSchema.parse(data);
 
-  const { error } = await supabase.auth.signUp({
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.auth.signInWithPassword({
     email: params.email,
     password: params.password,
   });
 
   if (error) {
-    throw new Error(error.message ?? '회원가입에 실패했습니다.');
+    throw new Error('세션 생성에 실패했습니다.');
   }
 
-  return { uid: '', redirectTo: ONBOARDING_PATH };
+  return result;
 };
 
 export const useSignupMutation = () => {
@@ -36,6 +37,10 @@ export const useSignupMutation = () => {
     onSuccess: async (data) => {
       await refresh();
       router.replace(data.redirectTo);
+    },
+    onError: (error) => {
+      const message = extractApiErrorMessage(error, '회원가입에 실패했습니다.');
+      throw new Error(message);
     },
   });
 };

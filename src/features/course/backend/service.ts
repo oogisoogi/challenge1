@@ -47,7 +47,8 @@ export const getCourses = async (
       `,
       { count: 'exact' },
     )
-    .eq('status', 'published');
+    .eq('status', 'published')
+    .eq('enrollments.status', 'active');
 
   if (q) {
     builder = builder.ilike('title', `%${q}%`);
@@ -63,6 +64,8 @@ export const getCourses = async (
 
   if (sort === 'latest') {
     builder = builder.range(from, to);
+  } else if (sort === 'popular') {
+    builder = builder.limit(1000);
   }
 
   const { data, error, count: total } = await builder;
