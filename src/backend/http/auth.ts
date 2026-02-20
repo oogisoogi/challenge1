@@ -61,3 +61,24 @@ export const requireLearnerRole = async (
 
   return null;
 };
+
+export const requireInstructorRole = async (
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<ErrorResult<string> | null> => {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (profile?.role !== 'instructor') {
+    return failure(
+      403,
+      'FORBIDDEN_ROLE',
+      'Instructor만 접근할 수 있습니다.',
+    );
+  }
+
+  return null;
+};
