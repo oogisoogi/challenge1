@@ -115,6 +115,21 @@ export const getAssignmentDetail = async (
 
   const assignment = assignmentRaw as unknown as RawAssignment;
 
+  // auto-close: allow_late=false이고 due_date <= now()이면 closed로 전환 (BR5, BR9)
+  if (
+    assignment.status === 'published' &&
+    !assignment.allow_late &&
+    new Date(assignment.due_date) <= new Date()
+  ) {
+    await supabase
+      .from(ASSIGNMENTS_TABLE)
+      .update({ status: 'closed' })
+      .eq('id', assignmentId)
+      .eq('status', 'published');
+
+    (assignment as unknown as { status: string }).status = 'closed';
+  }
+
   // Step 3 — 제출물 조회 (nullable)
   const { data: submissionRaw, error: subError } = await supabase
     .from(SUBMISSIONS_TABLE)

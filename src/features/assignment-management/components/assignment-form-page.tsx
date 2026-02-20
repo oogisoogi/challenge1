@@ -33,6 +33,11 @@ import {
   type CreateAssignmentBody,
 } from '@/features/assignment-management/lib/dto';
 
+const createAssignmentFormSchema = createAssignmentBodySchema.refine(
+  (data) => new Date(data.dueDate) > new Date(),
+  { message: '마감일은 미래 날짜여야 합니다.', path: ['dueDate'] },
+);
+
 type AssignmentFormPageProps = {
   mode: 'create' | 'edit';
   assignmentId?: string;
@@ -46,7 +51,7 @@ const formatDatetimeLocal = (isoString: string): string => {
 
 export const AssignmentFormPage = ({ mode, assignmentId }: AssignmentFormPageProps) => {
   const form = useForm<CreateAssignmentBody>({
-    resolver: zodResolver(createAssignmentBodySchema),
+    resolver: zodResolver(createAssignmentFormSchema),
     defaultValues: {
       courseId: '',
       title: '',

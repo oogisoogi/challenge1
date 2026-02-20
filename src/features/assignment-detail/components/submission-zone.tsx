@@ -31,6 +31,7 @@ type SubmissionState =
   | 'active'
   | 'active_late'
   | 'active_resubmit'
+  | 'already_submitted'
   | 'closed_deadline'
   | 'closed_status'
   | 'graded';
@@ -43,11 +44,13 @@ const resolveSubmissionState = (
     return 'graded';
   }
 
-  if (
-    assignment.allowResubmission &&
-    submission?.status === 'resubmission_required'
-  ) {
-    return 'active_resubmit';
+  if (submission?.status === 'resubmission_required') {
+    if (assignment.allowResubmission) return 'active_resubmit';
+    return 'closed_deadline';
+  }
+
+  if (submission?.status === 'submitted') {
+    return 'already_submitted';
   }
 
   if (assignment.status === 'closed') {
@@ -199,6 +202,10 @@ export const SubmissionZone = ({
             courseId={courseId}
             assignmentId={assignmentId}
           />
+        )}
+
+        {state === 'already_submitted' && (
+          <DisabledZone message="이미 제출한 과제입니다." />
         )}
 
         {state === 'graded' && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -99,6 +99,11 @@ export const SubmissionListPage = ({ assignmentId }: SubmissionListPageProps) =>
   const filteredSubmissions = filterSubmissions(submissions, filter);
   const counts = computeCounts(submissions);
 
+  const syncedSubmission = useMemo(
+    () => submissions.find((s) => s.id === selectedSubmission?.id) ?? null,
+    [submissions, selectedSubmission?.id],
+  );
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
       <header className="space-y-2">
@@ -155,7 +160,7 @@ export const SubmissionListPage = ({ assignmentId }: SubmissionListPageProps) =>
           counts={counts}
         />
 
-        <div className={`grid gap-6 ${selectedSubmission ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-6 ${syncedSubmission ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
           <div>
             {filteredSubmissions.length === 0 ? (
               <div className="rounded-lg border p-12 text-center text-muted-foreground">
@@ -219,9 +224,9 @@ export const SubmissionListPage = ({ assignmentId }: SubmissionListPageProps) =>
             )}
           </div>
 
-          {selectedSubmission && (
+          {syncedSubmission && (
             <SubmissionGradingPanel
-              submission={selectedSubmission}
+              submission={syncedSubmission}
               assignmentId={assignmentId}
               onClose={() => setSelectedSubmission(null)}
             />

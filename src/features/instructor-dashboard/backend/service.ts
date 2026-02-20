@@ -40,7 +40,8 @@ export const getInstructorDashboard = async (
       `,
     )
     .eq('instructor_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(20);
 
   if (coursesError) {
     return failure(
@@ -93,43 +94,59 @@ export const getInstructorDashboard = async (
     learnerCountByCourseId.set(cid, (learnerCountByCourseId.get(cid) ?? 0) + 1);
   }
 
-  // Step 3 — 코스별 채점 대기 건수 (MS-2, BR3)
-  const { data: pendingRaw, error: pendingError } = await supabase
-    .from(SUBMISSIONS_TABLE)
-    .select(
-      `
-      id,
-      assignments!submissions_assignment_id_fkey ( course_id )
-      `,
-    )
-    .eq('status', 'submitted');
+  // Step 3 — 본인 코스의 assignmentIds 추출 (Step 3, 4에서 공용)
+  const { data: assignmentsForFilter, error: assignmentsFilterError } =
+    await supabase
+      .from(ASSIGNMENTS_TABLE)
+      .select('id, course_id')
+      .in('course_id', courseIds);
 
-  if (pendingError) {
+  if (assignmentsFilterError) {
     return failure(
       500,
       instructorDashboardErrorCodes.fetchError,
-      pendingError.message,
+      assignmentsFilterError.message,
     );
   }
 
-  type RawPending = {
-    id: string;
-    assignments: { course_id: string } | null;
-  };
+  const assignmentRows = (assignmentsForFilter ?? []) as unknown as { id: string; course_id: string }[];
+  const assignmentIds = assignmentRows.map((a) => a.id);
 
-  const pendingRows = (pendingRaw ?? []) as unknown as RawPending[];
-
+  // 코스별 채점 대기 건수 (MS-2, BR3)
+  let totalPendingGradingCount = 0;
   const pendingCountByCourseId = new Map<string, number>();
-  for (const row of pendingRows) {
-    const cid = row.assignments?.course_id;
-    if (cid && courseIds.includes(cid)) {
-      pendingCountByCourseId.set(cid, (pendingCountByCourseId.get(cid) ?? 0) + 1);
-    }
-  }
 
-  const totalPendingGradingCount = Array.from(
-    pendingCountByCourseId.values(),
-  ).reduce((sum, count) => sum + count, 0);
+  if (assignmentIds.length > 0) {
+    const { data: pendingRaw, error: pendingError } = await supabase
+      .from(SUBMISSIONS_TABLE)
+      .select('id, assignment_id')
+      .in('assignment_id', assignmentIds)
+      .eq('status', 'submitted');
+
+    if (pendingError) {
+      return failure(
+        500,
+        instructorDashboardErrorCodes.fetchError,
+        pendingError.message,
+      );
+    }
+
+    const assignmentToCourse = new Map<string, string>();
+    for (const row of assignmentRows) {
+      assignmentToCourse.set(row.id, row.course_id);
+    }
+
+    for (const row of (pendingRaw ?? []) as unknown as { id: string; assignment_id: string }[]) {
+      const cid = assignmentToCourse.get(row.assignment_id);
+      if (cid) {
+        pendingCountByCourseId.set(cid, (pendingCountByCourseId.get(cid) ?? 0) + 1);
+      }
+    }
+
+    totalPendingGradingCount = Array.from(
+      pendingCountByCourseId.values(),
+    ).reduce((sum, count) => sum + count, 0);
+  }
 
   // 코스 응답 조립
   const instructorCourses = courses.map((c) => ({
@@ -145,25 +162,6 @@ export const getInstructorDashboard = async (
   }));
 
   // Step 4 — 최근 제출물 (MS-3, BR4)
-  // assignments를 먼저 조회하여 해당 courseIds에 속하는 assignmentIds를 추출
-  const { data: assignmentsForFilter, error: assignmentsFilterError } =
-    await supabase
-      .from(ASSIGNMENTS_TABLE)
-      .select('id')
-      .in('course_id', courseIds);
-
-  if (assignmentsFilterError) {
-    return failure(
-      500,
-      instructorDashboardErrorCodes.fetchError,
-      assignmentsFilterError.message,
-    );
-  }
-
-  const assignmentIds = (assignmentsForFilter ?? []).map(
-    (a: { id: string }) => a.id,
-  );
-
   if (assignmentIds.length === 0) {
     return success({
       courses: instructorCourses,
@@ -180,7 +178,7 @@ export const getInstructorDashboard = async (
       learner_id,
       status,
       is_late,
-      created_at,
+      submitted_at,
       assignments!submissions_assignment_id_fkey (
         id,
         title,
@@ -191,7 +189,7 @@ export const getInstructorDashboard = async (
       `,
     )
     .in('assignment_id', assignmentIds)
-    .order('created_at', { ascending: false })
+    .order('submitted_at', { ascending: false })
     .limit(10);
 
   if (submissionsError) {
@@ -207,7 +205,7 @@ export const getInstructorDashboard = async (
     learner_id: string;
     status: 'submitted' | 'graded' | 'resubmission_required';
     is_late: boolean;
-    created_at: string;
+    submitted_at: string;
     assignments: {
       id: string;
       title: string;
@@ -229,7 +227,7 @@ export const getInstructorDashboard = async (
     learnerName: s.profiles?.name ?? '',
     status: s.status,
     isLate: s.is_late,
-    submittedAt: s.created_at,
+    submittedAt: s.submitted_at,
   }));
 
   return success({
