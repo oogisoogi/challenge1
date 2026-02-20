@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ClipboardList } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,27 +47,32 @@ export const UpcomingAssignmentList = ({
   return (
     <div className="space-y-3">
       {assignments.map((assignment) => (
-        <Card key={assignment.id} className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{assignment.title}</p>
-              <p className="text-sm text-muted-foreground">
-                {assignment.courseTitle}
-              </p>
+        <Link
+          key={assignment.id}
+          href={`/courses/my/${assignment.courseId}/assignments/${assignment.id}`}
+        >
+          <Card className="p-4 transition-colors hover:bg-accent">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{assignment.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {assignment.courseTitle}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {getStatusBadge(assignment.submissionStatus)}
+                <span
+                  className={`text-sm font-medium ${getDeadlineColor(assignment.dueDate)}`}
+                >
+                  {formatDistanceToNow(new Date(assignment.dueDate), {
+                    addSuffix: true,
+                    locale: ko,
+                  })}
+                </span>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-3">
-              {getStatusBadge(assignment.submissionStatus)}
-              <span
-                className={`text-sm font-medium ${getDeadlineColor(assignment.dueDate)}`}
-              >
-                {formatDistanceToNow(new Date(assignment.dueDate), {
-                  addSuffix: true,
-                  locale: ko,
-                })}
-              </span>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
       ))}
     </div>
   );
