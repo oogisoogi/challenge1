@@ -21,6 +21,7 @@ const DIFFICULTY_LEVELS_TABLE = 'difficulty_levels';
 
 const COURSE_SELECT = `
   id,
+  instructor_id,
   title,
   description,
   category_id,
@@ -35,6 +36,7 @@ const COURSE_SELECT = `
 
 type RawCourse = {
   id: string;
+  instructor_id: string;
   title: string;
   description: string;
   category_id: string | null;
@@ -176,7 +178,7 @@ export const getCourse = async (
     return failure(404, courseManagementErrorCodes.notFound, '코스를 찾을 수 없습니다.');
   }
 
-  const raw = data as unknown as RawCourse & { instructor_id: string };
+  const raw = data as unknown as RawCourse;
 
   if (raw.instructor_id !== userId) {
     return failure(
