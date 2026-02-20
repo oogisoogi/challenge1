@@ -21,9 +21,10 @@ export const signUpUser = async (
   supabase: SupabaseClient,
   params: { email: string; password: string },
 ): Promise<HandlerResult<SignupResponse, AuthServiceError>> => {
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.admin.createUser({
     email: params.email,
     password: params.password,
+    email_confirm: true,
   });
 
   if (error) {
