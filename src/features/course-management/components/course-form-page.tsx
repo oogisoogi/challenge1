@@ -1,0 +1,237 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useCourseMetaQuery } from '@/features/course/hooks/useCourseMetaQuery';
+import { useCourseManagementDetailQuery } from '@/features/course-management/hooks/useCourseManagementDetailQuery';
+import { useCreateCourseMutation } from '@/features/course-management/hooks/useCreateCourseMutation';
+import { useUpdateCourseMutation } from '@/features/course-management/hooks/useUpdateCourseMutation';
+import {
+  createCourseBodySchema,
+  type CreateCourseBody,
+} from '@/features/course-management/lib/dto';
+import { CourseStatusButton } from './course-status-button';
+
+type CourseFormPageProps = {
+  mode: 'create' | 'edit';
+  courseId?: string;
+};
+
+export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
+  const form = useForm<CreateCourseBody>({
+    resolver: zodResolver(createCourseBodySchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      categoryId: '',
+      difficultyId: '',
+      curriculum: '',
+    },
+  });
+
+  const { data: courseMeta, isLoading: isMetaLoading } = useCourseMetaQuery();
+
+  const { data: courseDetail, isLoading: isDetailLoading } =
+    useCourseManagementDetailQuery(mode === 'edit' ? courseId : undefined);
+
+  const createMutation = useCreateCourseMutation();
+  const updateMutation = useUpdateCourseMutation(courseId ?? '');
+
+  const isSaving =
+    mode === 'create' ? createMutation.isPending : updateMutation.isPending;
+
+  useEffect(() => {
+    if (mode === 'edit' && courseDetail) {
+      form.reset({
+        title: courseDetail.title,
+        description: courseDetail.description,
+        categoryId: courseDetail.categoryId ?? '',
+        difficultyId: courseDetail.difficultyId ?? '',
+        curriculum: courseDetail.curriculum,
+      });
+    }
+  }, [courseDetail, mode, form]);
+
+  const onSubmit = (values: CreateCourseBody) => {
+    if (mode === 'create') {
+      createMutation.mutate(values);
+    } else {
+      updateMutation.mutate(values);
+    }
+  };
+
+  const isLoading = (mode === 'edit' && isDetailLoading) || isMetaLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold">
+          {mode === 'create' ? '코스 생성' : '코스 수정'}
+        </h1>
+        <p className="text-muted-foreground">
+          {mode === 'create'
+            ? '새 코스 정보를 입력하세요.'
+            : '코스 정보를 수정하세요.'}
+        </p>
+      </header>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>코스 제목 *</FormLabel>
+                <FormControl>
+                  <Input placeholder="코스 제목을 입력하세요" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>코스 소개</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="코스 소개를 입력하세요. Markdown 형식을 지원합니다."
+                    className="min-h-[120px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>카테고리 *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="카테고리를 선택하세요" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(courseMeta?.categories ?? []).map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="difficultyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>난이도 *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="난이도를 선택하세요" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(courseMeta?.difficultyLevels ?? []).map((diff) => (
+                        <SelectItem key={diff.id} value={diff.id}>
+                          {diff.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="curriculum"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>커리큘럼</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="커리큘럼을 입력하세요. Markdown 형식을 지원합니다."
+                    className="min-h-[160px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex items-center justify-between gap-4">
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              저장
+            </Button>
+
+            {mode === 'edit' && courseDetail && courseDetail.status !== 'archived' && (
+              <>
+                <Separator orientation="vertical" className="h-8" />
+                <CourseStatusButton
+                  courseId={courseDetail.id}
+                  currentStatus={courseDetail.status}
+                />
+              </>
+            )}
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+};
