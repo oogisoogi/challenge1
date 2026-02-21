@@ -1,10 +1,12 @@
 import type { Hono } from 'hono';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   failure,
   respond,
   success,
 } from '@/backend/http/response';
 import {
+  getLogger,
   getSupabase,
   type AppEnv,
 } from '@/backend/hono/context';
@@ -12,6 +14,23 @@ import { extractUserId } from '@/backend/http/auth';
 import { signupRequestSchema } from './schema';
 import { signUpUser } from './service';
 import { authErrorCodes } from './error';
+
+const getIsRestricted = async (
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<boolean> => {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('is_restricted')
+      .eq('id', userId)
+      .maybeSingle();
+
+    return data?.is_restricted === true;
+  } catch {
+    return false;
+  }
+};
 
 export const registerAuthRoutes = (app: Hono<AppEnv>) => {
   app.post('/api/auth/signup', async (c) => {
@@ -44,6 +63,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
   });
 
   app.get('/api/auth/me/profile', async (c) => {
+    const logger = getLogger(c);
     const userId = await extractUserId(c);
 
     if (!userId) {
@@ -54,11 +74,15 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
     }
 
     const supabase = getSupabase(c);
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, role, name, phone, bio, is_restricted')
+      .select('id, role, name, phone, bio')
       .eq('id', userId)
       .maybeSingle();
+
+    if (profileError) {
+      logger.error(`[me/profile] DB error: ${profileError.message}`);
+    }
 
     if (!profile) {
       return respond(
@@ -66,6 +90,8 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
         failure(404, 'PROFILE_NOT_FOUND', '프로필을 찾을 수 없습니다.'),
       );
     }
+
+    const isRestricted = await getIsRestricted(supabase, userId);
 
     return respond(
       c,
@@ -75,7 +101,7 @@ export const registerAuthRoutes = (app: Hono<AppEnv>) => {
         name: profile.name,
         phone: profile.phone,
         bio: profile.bio,
-        isRestricted: profile.is_restricted,
+        isRestricted,
       }),
     );
   });
