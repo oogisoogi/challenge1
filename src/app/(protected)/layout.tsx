@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { LOGIN_PATH } from "@/constants/auth";
 
@@ -25,6 +26,14 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
       router.replace(buildRedirectUrl(pathname));
     }
   }, [isAuthenticated, isLoading, pathname, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return null;
