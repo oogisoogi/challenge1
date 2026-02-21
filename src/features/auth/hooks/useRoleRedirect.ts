@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROLE_REDIRECT_MAP } from '@/features/auth/constants';
+import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client';
 import { useCurrentUser } from './useCurrentUser';
 import { useMyProfile } from './useMyProfile';
 
@@ -15,6 +16,7 @@ export const useRoleRedirect = (): RoleRedirectState => {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
   const { data: profile, isLoading: isProfileLoading, isError, error } = useMyProfile();
+  const isSigningOut = useRef(false);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -26,7 +28,16 @@ export const useRoleRedirect = (): RoleRedirectState => {
 
     if (isProfileLoading) return;
 
-    if (isError || !profile) return;
+    if (isError || !profile) {
+      if (isSigningOut.current) return;
+      isSigningOut.current = true;
+
+      const supabase = getSupabaseBrowserClient();
+      supabase.auth.signOut().finally(() => {
+        router.replace('/login');
+      });
+      return;
+    }
 
     const targetPath =
       ROLE_REDIRECT_MAP[profile.role as keyof typeof ROLE_REDIRECT_MAP];
