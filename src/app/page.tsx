@@ -1,81 +1,105 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
-import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
-import { useRoleRedirect } from "@/features/auth/hooks/useRoleRedirect";
+import { useState } from "react";
+import { CourseFilters } from "@/features/course/components/course-filters";
+import { CourseList } from "@/features/course/components/course-list";
+import { useCourseListQuery } from "@/features/course/hooks/useCourseListQuery";
+import { DEFAULT_PAGE_SIZE } from "@/features/course/constants";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Home() {
-  const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
-  const redirectState = useRoleRedirect();
 
-  if (isAuthLoading) {
-    return <RedirectLoading />;
-  }
+  const [q, setQ] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [difficultyId, setDifficultyId] = useState("");
+  const [sort, setSort] = useState<"latest" | "popular">("latest");
+  const [page, setPage] = useState(1);
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  const query = {
+    q: q || undefined,
+    categoryId: categoryId || undefined,
+    difficultyId: difficultyId || undefined,
+    sort,
+    page,
+    limit: DEFAULT_PAGE_SIZE,
+  };
 
-  if (redirectState.status === 'error') {
-    return <ProfileErrorFallback errorMessage={redirectState.errorMessage} />;
-  }
+  const { data, isLoading: isCoursesLoading, isError } = useCourseListQuery(query);
 
-  return <RedirectLoading />;
-}
+  const totalPages = data ? Math.ceil(data.total / data.limit) : 0;
 
-function ProfileErrorFallback({ errorMessage }: { errorMessage?: string }) {
-  const router = useRouter();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const handleChangeQ = (value: string) => {
+    setQ(value);
+    setPage(1);
+  };
 
-  const handleSignOutAndNavigate = useCallback(async (destination: string) => {
-    setIsNavigating(true);
-    const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.replace(destination);
-  }, [router]);
+  const handleChangeCategoryId = (value: string) => {
+    setCategoryId(value);
+    setPage(1);
+  };
+
+  const handleChangeDifficultyId = (value: string) => {
+    setDifficultyId(value);
+    setPage(1);
+  };
+
+  const handleChangeSort = (value: string) => {
+    setSort(value as "latest" | "popular");
+    setPage(1);
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <p className="text-sm text-red-500">
-          {errorMessage ?? '프로필을 불러올 수 없습니다.'}
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold">코스 탐색</h1>
+        <p className="text-muted-foreground">
+          다양한 코스를 탐색하고 수강신청하세요.
         </p>
-        <p className="text-sm text-slate-500">
-          프로필이 등록되지 않은 계정입니다. 회원가입을 진행하거나 다른 계정으로 로그인해주세요.
-        </p>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => handleSignOutAndNavigate('/login')}
-            disabled={isNavigating}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+      </header>
+
+      <CourseFilters
+        q={q}
+        categoryId={categoryId}
+        difficultyId={difficultyId}
+        sort={sort}
+        onChangeQ={handleChangeQ}
+        onChangeCategoryId={handleChangeCategoryId}
+        onChangeDifficultyId={handleChangeDifficultyId}
+        onChangeSort={handleChangeSort}
+      />
+
+      <CourseList
+        courses={data?.courses}
+        isLoading={isCoursesLoading}
+        isError={isError}
+      />
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
           >
-            로그아웃
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSignOutAndNavigate('/signup')}
-            disabled={isNavigating}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            <ChevronLeft className="h-4 w-4" />
+            이전
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
           >
-            회원가입
-          </button>
+            다음
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function RedirectLoading() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-        <p className="text-sm text-slate-500">리다이렉트 중...</p>
-      </div>
+      )}
     </div>
   );
 }
