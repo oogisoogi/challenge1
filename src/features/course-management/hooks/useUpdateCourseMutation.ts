@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractApiErrorMessage } from '@/lib/remote/api-client';
 import { courseManagementResponseSchema } from '@/features/course-management/lib/dto';
 import { COURSE_MANAGEMENT_QUERY_KEYS } from '@/features/course-management/constants';
+import { INSTRUCTOR_DASHBOARD_QUERY_KEYS } from '@/features/instructor-dashboard/constants';
 import { toast } from '@/hooks/use-toast';
 import type { UpdateCourseBody } from '@/features/course-management/lib/dto';
 
@@ -31,6 +32,9 @@ export const useUpdateCourseMutation = (courseId: string) => {
       toast({ title: '저장 완료', description: '코스가 성공적으로 수정되었습니다.' });
       queryClient.invalidateQueries({
         queryKey: COURSE_MANAGEMENT_QUERY_KEYS.detail(courseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: INSTRUCTOR_DASHBOARD_QUERY_KEYS.all,
       });
     },
     onError: (error: Error) => {

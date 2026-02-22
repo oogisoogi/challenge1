@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractApiErrorMessage } from '@/lib/remote/api-client';
 import { assignmentManagementResponseSchema } from '@/features/assignment-management/lib/dto';
 import { ASSIGNMENT_MANAGEMENT_QUERY_KEYS } from '@/features/assignment-management/constants';
+import { INSTRUCTOR_DASHBOARD_QUERY_KEYS } from '@/features/instructor-dashboard/constants';
 import { toast } from '@/hooks/use-toast';
 import type { UpdateAssignmentBody } from '@/features/assignment-management/lib/dto';
 
@@ -34,8 +35,11 @@ export const useUpdateAssignmentMutation = (assignmentId: string) => {
       updateAssignmentFetcher({ assignmentId, body }),
     onSuccess: () => {
       toast({ title: '과제 수정 완료', description: '과제가 성공적으로 수정되었습니다.' });
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ASSIGNMENT_MANAGEMENT_QUERY_KEYS.detail(assignmentId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: INSTRUCTOR_DASHBOARD_QUERY_KEYS.all,
       });
     },
     onError: (error: Error) => {

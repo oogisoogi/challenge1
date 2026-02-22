@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractApiErrorMessage } from '@/lib/remote/api-client';
 import { gradeSubmissionResponseSchema } from '@/features/assignment-management/lib/dto';
 import { ASSIGNMENT_MANAGEMENT_QUERY_KEYS } from '@/features/assignment-management/constants';
+import { INSTRUCTOR_DASHBOARD_QUERY_KEYS } from '@/features/instructor-dashboard/constants';
 import { toast } from '@/hooks/use-toast';
 import type { GradeSubmissionBody } from '@/features/assignment-management/lib/dto';
 
@@ -37,6 +38,9 @@ export const useGradeSubmissionMutation = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ASSIGNMENT_MANAGEMENT_QUERY_KEYS.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: INSTRUCTOR_DASHBOARD_QUERY_KEYS.all,
       });
 
       const actionLabel =
