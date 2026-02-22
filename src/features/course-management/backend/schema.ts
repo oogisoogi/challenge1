@@ -36,6 +36,12 @@ export const courseIdParamSchema = z.object({
 
 export type CourseIdParam = z.infer<typeof courseIdParamSchema>;
 
+export const createCategoryBodySchema_instructor = z.object({
+  name: z.string().min(1, '카테고리 이름을 입력해주세요.'),
+});
+
+export type CreateCategoryBodyInstructor = z.infer<typeof createCategoryBodySchema_instructor>;
+
 // ---------------------------------------------------------------------------
 // Response Schemas
 // ---------------------------------------------------------------------------
@@ -55,3 +61,10 @@ export const courseManagementResponseSchema = z.object({
 });
 
 export type CourseManagementResponse = z.infer<typeof courseManagementResponseSchema>;
+
+export const categoryCreatedResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+});
+
+export type CategoryCreatedResponse = z.infer<typeof categoryCreatedResponseSchema>;

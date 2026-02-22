@@ -10,7 +10,9 @@ import {
   type CourseManagementServiceError,
 } from './error';
 import type {
+  CategoryCreatedResponse,
   CourseManagementResponse,
+  CreateCategoryBodyInstructor,
   CreateCourseBody,
   UpdateCourseBody,
 } from './schema';
@@ -258,6 +260,35 @@ export const updateCourse = async (
   }
 
   return success(mapRawCourse(updatedData as unknown as RawCourse));
+};
+
+// ---------------------------------------------------------------------------
+// createCategoryForInstructor — 강사가 새 카테고리 추가
+// ---------------------------------------------------------------------------
+
+export const createCategoryForInstructor = async (
+  supabase: SupabaseClient,
+  body: CreateCategoryBodyInstructor,
+): Promise<HandlerResult<CategoryCreatedResponse, CourseManagementServiceError>> => {
+  const { data, error } = await supabase
+    .from(CATEGORIES_TABLE)
+    .insert({ name: body.name, is_active: true })
+    .select('id, name')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return failure(409, courseManagementErrorCodes.duplicateCategory, '이미 존재하는 카테고리입니다.');
+    }
+    return failure(
+      500,
+      courseManagementErrorCodes.categoryCreateFailed,
+      error.message ?? '카테고리 생성에 실패했습니다.',
+    );
+  }
+
+  const row = data as unknown as { id: string; name: string };
+  return success({ id: row.id, name: row.name }, 201);
 };
 
 // ---------------------------------------------------------------------------

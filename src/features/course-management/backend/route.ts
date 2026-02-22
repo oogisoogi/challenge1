@@ -5,11 +5,13 @@ import { extractUserId, requireInstructorRole } from '@/backend/http/auth';
 import { courseManagementErrorCodes } from './error';
 import {
   createCourseBodySchema,
+  createCategoryBodySchema_instructor,
   updateCourseBodySchema,
   updateCourseStatusBodySchema,
   courseIdParamSchema,
 } from './schema';
 import {
+  createCategoryForInstructor,
   createCourse,
   deleteCourse,
   getCourse,
@@ -247,6 +249,44 @@ export const registerCourseManagementRoutes = (app: Hono<AppEnv>) => {
     }
 
     const result = await deleteCourse(supabase, userId, paramResult.data.courseId);
+    return respond(c, result);
+  });
+
+  // POST /api/instructor/categories — 강사용 카테고리 추가
+  app.post('/api/instructor/categories', async (c) => {
+    const userId = await extractUserId(c);
+
+    if (!userId) {
+      return respond(
+        c,
+        failure(
+          401,
+          courseManagementErrorCodes.unauthorized,
+          '인증이 필요합니다.',
+        ),
+      );
+    }
+
+    const supabase = getSupabase(c);
+
+    const roleError = await requireInstructorRole(supabase, userId);
+    if (roleError) {
+      return respond(c, roleError);
+    }
+
+    const bodyResult = createCategoryBodySchema_instructor.safeParse(await c.req.json());
+    if (!bodyResult.success) {
+      return respond(
+        c,
+        failure(
+          400,
+          courseManagementErrorCodes.validationError,
+          bodyResult.error.errors[0]?.message ?? '유효하지 않은 요청입니다.',
+        ),
+      );
+    }
+
+    const result = await createCategoryForInstructor(supabase, bodyResult.data);
     return respond(c, result);
   });
 };

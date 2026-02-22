@@ -11,6 +11,8 @@ export const courseManagementErrorCodes = {
   updateFailed: 'COURSE_MGMT_UPDATE_FAILED',
   deleteFailed: 'COURSE_MGMT_DELETE_FAILED',
   deleteNotAllowed: 'COURSE_MGMT_DELETE_NOT_ALLOWED',
+  duplicateCategory: 'COURSE_MGMT_DUPLICATE_CATEGORY',
+  categoryCreateFailed: 'COURSE_MGMT_CATEGORY_CREATE_FAILED',
   fetchError: 'COURSE_MGMT_FETCH_ERROR',
 } as const;
 

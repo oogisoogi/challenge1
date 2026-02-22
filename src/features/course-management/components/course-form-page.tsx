@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -22,11 +22,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { useCourseMetaQuery } from '@/features/course/hooks/useCourseMetaQuery';
 import { useCourseManagementDetailQuery } from '@/features/course-management/hooks/useCourseManagementDetailQuery';
 import { useCreateCourseMutation } from '@/features/course-management/hooks/useCreateCourseMutation';
 import { useUpdateCourseMutation } from '@/features/course-management/hooks/useUpdateCourseMutation';
+import { useCreateCategoryMutation } from '@/features/course-management/hooks/useCreateCategoryMutation';
 import {
   createCourseBodySchema,
   type CreateCourseBody,
@@ -57,6 +66,10 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
 
   const createMutation = useCreateCourseMutation();
   const updateMutation = useUpdateCourseMutation(courseId ?? '');
+  const createCategoryMutation = useCreateCategoryMutation();
+
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const isSaving =
     mode === 'create' ? createMutation.isPending : updateMutation.isPending;
@@ -79,6 +92,19 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
     } else {
       updateMutation.mutate(values);
     }
+  };
+
+  const handleAddCategory = () => {
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+
+    createCategoryMutation.mutate(trimmed, {
+      onSuccess: (created) => {
+        form.setValue('categoryId', created.id);
+        setNewCategoryName('');
+        setIsAddCategoryOpen(false);
+      },
+    });
   };
 
   const isLoading = (mode === 'edit' && isDetailLoading) || isMetaLoading;
@@ -145,23 +171,34 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>카테고리 *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="카테고리를 선택하세요" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {(courseMeta?.categories ?? []).map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="카테고리를 선택하세요" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(courseMeta?.categories ?? []).map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setIsAddCategoryOpen(true)}
+                      title="새 카테고리 추가"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -232,6 +269,48 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
           </div>
         </form>
       </Form>
+
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>새 카테고리 추가</DialogTitle>
+            <DialogDescription>
+              추가할 카테고리 이름을 입력하세요.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            placeholder="카테고리 이름"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddCategory();
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setNewCategoryName('');
+                setIsAddCategoryOpen(false);
+              }}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleAddCategory}
+              disabled={!newCategoryName.trim() || createCategoryMutation.isPending}
+            >
+              {createCategoryMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              추가
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
