@@ -261,6 +261,67 @@ export const updateCourse = async (
 };
 
 // ---------------------------------------------------------------------------
+// deleteCourse — 코스 삭제 (draft / archived 상태만 허용)
+// ---------------------------------------------------------------------------
+
+export const deleteCourse = async (
+  supabase: SupabaseClient,
+  userId: string,
+  courseId: string,
+): Promise<HandlerResult<{ deleted: true }, CourseManagementServiceError>> => {
+  const { data: existing, error: fetchError } = await supabase
+    .from(COURSES_TABLE)
+    .select('id, instructor_id, status')
+    .eq('id', courseId)
+    .maybeSingle();
+
+  if (fetchError) {
+    return failure(500, courseManagementErrorCodes.fetchError, fetchError.message);
+  }
+
+  if (!existing) {
+    return failure(404, courseManagementErrorCodes.notFound, '코스를 찾을 수 없습니다.');
+  }
+
+  const existingRow = existing as unknown as {
+    id: string;
+    instructor_id: string;
+    status: string;
+  };
+
+  if (existingRow.instructor_id !== userId) {
+    return failure(
+      403,
+      courseManagementErrorCodes.forbidden,
+      '본인의 코스만 삭제할 수 있습니다.',
+    );
+  }
+
+  if (existingRow.status === 'published') {
+    return failure(
+      400,
+      courseManagementErrorCodes.deleteNotAllowed,
+      '게시 중인 코스는 삭제할 수 없습니다. 먼저 보관 처리해주세요.',
+    );
+  }
+
+  const { error: deleteError } = await supabase
+    .from(COURSES_TABLE)
+    .delete()
+    .eq('id', courseId);
+
+  if (deleteError) {
+    return failure(
+      500,
+      courseManagementErrorCodes.deleteFailed,
+      deleteError.message ?? '코스 삭제에 실패했습니다.',
+    );
+  }
+
+  return success({ deleted: true as const });
+};
+
+// ---------------------------------------------------------------------------
 // updateCourseStatus — 상태 전환 (BR2: draft -> published -> archived)
 // ---------------------------------------------------------------------------
 

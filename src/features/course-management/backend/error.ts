@@ -9,6 +9,8 @@ export const courseManagementErrorCodes = {
   invalidStatusTransition: 'COURSE_MGMT_INVALID_STATUS_TRANSITION',
   createFailed: 'COURSE_MGMT_CREATE_FAILED',
   updateFailed: 'COURSE_MGMT_UPDATE_FAILED',
+  deleteFailed: 'COURSE_MGMT_DELETE_FAILED',
+  deleteNotAllowed: 'COURSE_MGMT_DELETE_NOT_ALLOWED',
   fetchError: 'COURSE_MGMT_FETCH_ERROR',
 } as const;
 

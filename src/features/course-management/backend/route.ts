@@ -11,6 +11,7 @@ import {
 } from './schema';
 import {
   createCourse,
+  deleteCourse,
   getCourse,
   updateCourse,
   updateCourseStatus,
@@ -206,6 +207,46 @@ export const registerCourseManagementRoutes = (app: Hono<AppEnv>) => {
       paramResult.data.courseId,
       bodyResult.data.status,
     );
+    return respond(c, result);
+  });
+
+  // DELETE /api/instructor/courses/:courseId — 코스 삭제
+  app.delete('/api/instructor/courses/:courseId', async (c) => {
+    const userId = await extractUserId(c);
+
+    if (!userId) {
+      return respond(
+        c,
+        failure(
+          401,
+          courseManagementErrorCodes.unauthorized,
+          '인증이 필요합니다.',
+        ),
+      );
+    }
+
+    const supabase = getSupabase(c);
+
+    const roleError = await requireInstructorRole(supabase, userId);
+    if (roleError) {
+      return respond(c, roleError);
+    }
+
+    const paramResult = courseIdParamSchema.safeParse({
+      courseId: c.req.param('courseId'),
+    });
+    if (!paramResult.success) {
+      return respond(
+        c,
+        failure(
+          400,
+          courseManagementErrorCodes.validationError,
+          paramResult.error.errors[0]?.message ?? '유효하지 않은 코스 ID입니다.',
+        ),
+      );
+    }
+
+    const result = await deleteCourse(supabase, userId, paramResult.data.courseId);
     return respond(c, result);
   });
 };

@@ -1,6 +1,7 @@
 'use client';
 
-import { RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -68,7 +69,15 @@ export const InstructorDashboardPage = () => {
       </div>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold">내 코스 목록</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">내 코스 목록</h2>
+          <Link href="/instructor/courses/new">
+            <Button size="sm">
+              <Plus className="mr-1 h-4 w-4" />
+              새 코스 만들기
+            </Button>
+          </Link>
+        </div>
         <MyCourseList courses={data?.courses ?? []} />
       </section>
 
