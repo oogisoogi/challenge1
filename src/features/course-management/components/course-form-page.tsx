@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Info, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import {
   Form,
@@ -137,6 +137,21 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
             : '코스 정보를 수정하세요.'}
         </p>
       </header>
+
+      {mode === 'edit' && courseDetail && courseDetail.status === 'draft' && (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950">
+          <Info className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="flex flex-1 items-center justify-between gap-4">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              이 코스는 아직 <strong>초안</strong> 상태입니다. 게시해야 학습자에게 노출됩니다.
+            </p>
+            <CourseStatusButton
+              courseId={courseDetail.id}
+              currentStatus={courseDetail.status}
+            />
+          </div>
+        </div>
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
