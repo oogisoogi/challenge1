@@ -43,6 +43,7 @@ type AssignmentFormPageProps = {
   mode: 'create' | 'edit';
   assignmentId?: string;
   defaultCourseId?: string;
+  embedded?: boolean;
 };
 
 const formatDatetimeLocal = (isoString: string): string => {
@@ -51,7 +52,7 @@ const formatDatetimeLocal = (isoString: string): string => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
-export const AssignmentFormPage = ({ mode, assignmentId, defaultCourseId }: AssignmentFormPageProps) => {
+export const AssignmentFormPage = ({ mode, assignmentId, defaultCourseId, embedded }: AssignmentFormPageProps) => {
   const form = useForm<CreateAssignmentBody>({
     resolver: zodResolver(createAssignmentFormSchema),
     defaultValues: {
@@ -119,24 +120,28 @@ export const AssignmentFormPage = ({ mode, assignmentId, defaultCourseId }: Assi
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
-      <Link href="/instructor/dashboard">
-        <Button variant="ghost" size="sm" type="button">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          대시보드
-        </Button>
-      </Link>
+    <div className={embedded ? 'flex flex-col gap-6' : 'mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12'}>
+      {!embedded && (
+        <Link href="/instructor/dashboard">
+          <Button variant="ghost" size="sm" type="button">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            대시보드
+          </Button>
+        </Link>
+      )}
 
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold">
-          {mode === 'create' ? '과제 생성' : '과제 수정'}
-        </h1>
-        <p className="text-muted-foreground">
-          {mode === 'create'
-            ? '새 과제 정보를 입력하세요.'
-            : '과제 정보를 수정하세요.'}
-        </p>
-      </header>
+      {!embedded && (
+        <header className="space-y-2">
+          <h1 className="text-3xl font-semibold">
+            {mode === 'create' ? '과제 생성' : '과제 수정'}
+          </h1>
+          <p className="text-muted-foreground">
+            {mode === 'create'
+              ? '새 과제 정보를 입력하세요.'
+              : '과제 정보를 수정하세요.'}
+          </p>
+        </header>
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

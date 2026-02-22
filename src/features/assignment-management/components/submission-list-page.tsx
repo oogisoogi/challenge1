@@ -151,7 +151,7 @@ export const SubmissionListPage = ({ assignmentId }: SubmissionListPageProps) =>
         </CardHeader>
         {isEditOpen && (
           <CardContent className="pt-0">
-            <AssignmentFormPage mode="edit" assignmentId={assignmentId} />
+            <AssignmentFormPage mode="edit" assignmentId={assignmentId} embedded />
           </CardContent>
         )}
       </Card>
