@@ -141,7 +141,7 @@ export const createCourse = async (
       category_id: body.categoryId,
       difficulty_id: body.difficultyId,
       curriculum: body.curriculum,
-      status: 'draft',
+      status: 'published',
     })
     .select(COURSE_SELECT)
     .single();
