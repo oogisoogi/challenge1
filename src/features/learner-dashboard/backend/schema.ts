@@ -36,6 +36,7 @@ export type UpcomingAssignment = z.infer<typeof upcomingAssignmentSchema>;
 export const recentFeedbackSchema = z.object({
   submissionId: z.string().uuid(),
   assignmentId: z.string().uuid(),
+  courseId: z.string().uuid(),
   assignmentTitle: z.string(),
   courseTitle: z.string(),
   score: z.number().nullable(),

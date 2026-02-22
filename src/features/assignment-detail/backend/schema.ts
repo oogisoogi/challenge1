@@ -18,6 +18,7 @@ export type AssignmentDetailParam = z.infer<typeof assignmentDetailParamSchema>;
 export const assignmentDetailSchema = z.object({
   id: z.string().uuid(),
   courseId: z.string().uuid(),
+  courseTitle: z.string(),
   title: z.string(),
   description: z.string(),
   dueDate: z.string(),

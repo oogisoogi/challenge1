@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -106,6 +107,13 @@ export const SubmissionListPage = ({ assignmentId }: SubmissionListPageProps) =>
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
+      <Link href="/instructor/dashboard">
+        <Button variant="ghost" size="sm">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          대시보드
+        </Button>
+      </Link>
+
       <header className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">

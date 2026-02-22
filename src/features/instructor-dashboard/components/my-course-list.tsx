@@ -116,7 +116,7 @@ export const MyCourseList = ({ courses }: MyCourseListProps) => {
                 </DropdownMenu>
               </div>
 
-              <Link href={`/instructor/courses/${course.id}/edit`}>
+              <Link href={`/courses/${course.id}`}>
                 <CardHeader className="space-y-2">
                   <div className="flex items-start justify-between gap-2 pr-10">
                     <h3 className="line-clamp-1 text-lg font-semibold">

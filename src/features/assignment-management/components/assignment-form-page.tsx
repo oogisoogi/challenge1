@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import {
   Form,
   FormControl,
@@ -41,6 +42,7 @@ const createAssignmentFormSchema = createAssignmentBodySchema.refine(
 type AssignmentFormPageProps = {
   mode: 'create' | 'edit';
   assignmentId?: string;
+  defaultCourseId?: string;
 };
 
 const formatDatetimeLocal = (isoString: string): string => {
@@ -49,11 +51,11 @@ const formatDatetimeLocal = (isoString: string): string => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
-export const AssignmentFormPage = ({ mode, assignmentId }: AssignmentFormPageProps) => {
+export const AssignmentFormPage = ({ mode, assignmentId, defaultCourseId }: AssignmentFormPageProps) => {
   const form = useForm<CreateAssignmentBody>({
     resolver: zodResolver(createAssignmentFormSchema),
     defaultValues: {
-      courseId: '',
+      courseId: defaultCourseId ?? '',
       title: '',
       description: '',
       dueDate: '',
@@ -118,6 +120,13 @@ export const AssignmentFormPage = ({ mode, assignmentId }: AssignmentFormPagePro
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
+      <Link href="/instructor/dashboard">
+        <Button variant="ghost" size="sm" type="button">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          대시보드
+        </Button>
+      </Link>
+
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">
           {mode === 'create' ? '과제 생성' : '과제 수정'}

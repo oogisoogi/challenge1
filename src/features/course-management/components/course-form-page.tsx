@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus } from 'lucide-react';
+import Link from 'next/link';
 import {
   Form,
   FormControl,
@@ -119,6 +120,13 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
+      <Link href="/instructor/dashboard">
+        <Button variant="ghost" size="sm" type="button">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          대시보드
+        </Button>
+      </Link>
+
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">
           {mode === 'create' ? '코스 생성' : '코스 수정'}
@@ -252,10 +260,21 @@ export const CourseFormPage = ({ mode, courseId }: CourseFormPageProps) => {
           />
 
           <div className="flex items-center justify-between gap-4">
-            <Button type="submit" disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              저장
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button type="submit" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                저장
+              </Button>
+
+              {mode === 'edit' && courseId && (
+                <Link href={`/instructor/assignments/new?courseId=${courseId}`}>
+                  <Button variant="outline" type="button">
+                    <Plus className="mr-1 h-4 w-4" />
+                    이 코스에 과제 만들기
+                  </Button>
+                </Link>
+              )}
+            </div>
 
             {mode === 'edit' && courseDetail && courseDetail.status !== 'archived' && (
               <>

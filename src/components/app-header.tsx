@@ -2,22 +2,22 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   BookOpen,
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Search,
   Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useMyProfile } from "@/features/auth/hooks/useMyProfile";
-import { ROLE_REDIRECT_MAP } from "@/features/auth/constants";
 
 const ROLE_NAV_CONFIG = {
   learner: [
+    { href: "/", label: "코스 탐색", icon: Search },
     { href: "/courses/my", label: "내 코스", icon: BookOpen },
   ],
   instructor: [
@@ -29,7 +29,6 @@ const ROLE_NAV_CONFIG = {
 } as const;
 
 export const AppHeader = () => {
-  const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
   const { data: profile } = useMyProfile();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -38,8 +37,8 @@ export const AppHeader = () => {
     setIsLoggingOut(true);
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
-    router.replace("/login");
-  }, [router]);
+    window.location.href = "/login";
+  }, []);
 
   const roleNav =
     profile?.role && profile.role in ROLE_NAV_CONFIG

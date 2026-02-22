@@ -33,6 +33,7 @@ type RawAssignment = {
   allow_late: boolean;
   allow_resubmission: boolean;
   status: 'published' | 'closed';
+  courses: { title: string } | null;
 };
 
 type RawAssignmentFull = Omit<RawAssignment, 'status'> & {
@@ -90,7 +91,7 @@ export const getAssignmentDetail = async (
   const { data: assignmentRaw, error: assignError } = await supabase
     .from(ASSIGNMENTS_TABLE)
     .select(
-      'id, course_id, title, description, due_date, weight, allow_late, allow_resubmission, status',
+      'id, course_id, title, description, due_date, weight, allow_late, allow_resubmission, status, courses!assignments_course_id_fkey ( title )',
     )
     .eq('id', assignmentId)
     .eq('course_id', courseId)
@@ -170,6 +171,7 @@ export const getAssignmentDetail = async (
     assignment: {
       id: assignment.id,
       courseId: assignment.course_id,
+      courseTitle: assignment.courses?.title ?? '',
       title: assignment.title,
       description: assignment.description,
       dueDate: assignment.due_date,

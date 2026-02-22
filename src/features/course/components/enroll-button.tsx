@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -42,14 +43,21 @@ export const EnrollButton = ({
   if (isEnrolled) {
     return (
       <>
-        <Button
-          variant="destructive"
-          size="lg"
-          disabled={isPending}
-          onClick={() => setDialogOpen(true)}
-        >
-          {cancelMutation.isPending ? '처리 중...' : '수강취소'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/courses/my">
+            <Button variant="outline" size="lg">
+              내 학습으로
+            </Button>
+          </Link>
+          <Button
+            variant="destructive"
+            size="lg"
+            disabled={isPending}
+            onClick={() => setDialogOpen(true)}
+          >
+            {cancelMutation.isPending ? '처리 중...' : '수강취소'}
+          </Button>
+        </div>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>

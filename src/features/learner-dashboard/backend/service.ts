@@ -198,6 +198,7 @@ export const getLearnerDashboard = async (
       graded_at,
       assignments!submissions_assignment_id_fkey (
         title,
+        course_id,
         courses!assignments_course_id_fkey ( title )
       )
       `,
@@ -220,6 +221,7 @@ export const getLearnerDashboard = async (
     graded_at: string | null;
     assignments: {
       title: string;
+      course_id: string;
       courses: { title: string } | null;
     } | null;
   };
@@ -229,6 +231,7 @@ export const getLearnerDashboard = async (
   const recentFeedback = feedbackRows.map((f) => ({
     submissionId: f.id,
     assignmentId: f.assignment_id,
+    courseId: f.assignments?.course_id ?? '',
     assignmentTitle: f.assignments?.title ?? '',
     courseTitle: f.assignments?.courses?.title ?? '',
     score: f.score,

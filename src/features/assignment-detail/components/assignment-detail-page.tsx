@@ -103,6 +103,7 @@ export const AssignmentDetailPage = ({
       </div>
 
       <div>
+        <p className="text-sm text-muted-foreground">{assignment.courseTitle}</p>
         <h1 className="text-2xl font-bold">{assignment.title}</h1>
       </div>
 

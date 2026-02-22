@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen } from 'lucide-react';
+import { BarChart3, BookOpen } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,9 +46,20 @@ export const EnrolledCourseList = ({ courses }: EnrolledCourseListProps) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {course.instructorName}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {course.instructorName}
+                </p>
+                <Link
+                  href={`/courses/my/${course.id}/grades`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
+                    <BarChart3 className="h-3 w-3" />
+                    성적
+                  </Button>
+                </Link>
+              </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
