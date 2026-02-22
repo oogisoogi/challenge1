@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, extractApiErrorMessage } from '@/lib/remote/api-client';
 import { enrollResponseSchema } from '@/features/course/lib/dto';
 import { COURSE_QUERY_KEYS } from '@/features/course/constants';
+import { DASHBOARD_QUERY_KEYS } from '@/features/learner-dashboard/constants';
 import { toast } from '@/hooks/use-toast';
 
 const enrollFetcher = async (courseId: string) => {
@@ -24,6 +25,7 @@ export const useEnrollMutation = (courseId: string) => {
     onSuccess: () => {
       toast({ title: '수강신청 완료', description: '코스에 성공적으로 등록되었습니다.' });
       queryClient.invalidateQueries({ queryKey: COURSE_QUERY_KEYS.detail(courseId) });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_KEYS.all });
     },
     onError: (error: Error) => {
       toast({ variant: 'destructive', title: '수강신청 실패', description: error.message });
