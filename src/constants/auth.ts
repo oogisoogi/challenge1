@@ -1,7 +1,8 @@
 import { match } from "ts-pattern";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup"] as const;
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/courses"] as const;
 const PUBLIC_PREFIXES = ["/_next", "/api", "/favicon", "/static", "/docs", "/images"] as const;
+const PROTECTED_PREFIXES = ["/courses/my"] as const;
 
 export const LOGIN_PATH = "/login";
 export const SIGNUP_PATH = "/signup";
@@ -16,7 +17,11 @@ export const isAuthPublicPath = (pathname: string) => {
 
   return match(normalized)
     .when(
-      (path) => PUBLIC_PATHS.some((publicPath) => publicPath === path),
+      (path) => PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix)),
+      () => false
+    )
+    .when(
+      (path) => PUBLIC_PATHS.some((publicPath) => path === publicPath || path.startsWith(publicPath + "/")),
       () => true
     )
     .when(
