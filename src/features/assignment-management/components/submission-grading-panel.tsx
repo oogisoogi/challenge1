@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -71,11 +72,14 @@ export const SubmissionGradingPanel = ({
     },
   });
 
+  const [isResubmissionMode, setIsResubmissionMode] = useState(false);
+
   const feedbackValue = form.watch('feedback');
   const scoreValue = form.watch('score');
 
   const isGradeButtonDisabled =
     isPending ||
+    isResubmissionMode ||
     !feedbackValue ||
     feedbackValue.trim().length === 0 ||
     scoreValue === null ||
@@ -191,7 +195,26 @@ export const SubmissionGradingPanel = ({
 
         {/* 채점 폼 */}
         <section className="space-y-4">
-          <h3 className="text-sm font-medium">채점</h3>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={isResubmissionMode ? 'outline' : 'default'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setIsResubmissionMode(false)}
+            >
+              채점
+            </Button>
+            <Button
+              type="button"
+              variant={isResubmissionMode ? 'destructive' : 'outline'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setIsResubmissionMode(true)}
+            >
+              재제출 요청
+            </Button>
+          </div>
           <Form {...form}>
             <div className="space-y-4">
               <FormField
@@ -206,7 +229,8 @@ export const SubmissionGradingPanel = ({
                         min={0}
                         max={100}
                         step={1}
-                        placeholder="점수 입력"
+                        placeholder={isResubmissionMode ? '재제출 요청 시 점수 불필요' : '점수 입력'}
+                        disabled={isResubmissionMode}
                         value={field.value ?? ''}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -237,22 +261,11 @@ export const SubmissionGradingPanel = ({
                 )}
               />
 
-              <div className="flex gap-2">
+              {isResubmissionMode ? (
                 <Button
                   type="button"
-                  className="flex-1"
-                  disabled={isGradeButtonDisabled}
-                  onClick={handleGrade}
-                >
-                  {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  채점 완료
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  variant="destructive"
+                  className="w-full"
                   disabled={isResubmissionButtonDisabled}
                   onClick={handleResubmission}
                 >
@@ -261,7 +274,19 @@ export const SubmissionGradingPanel = ({
                   ) : null}
                   재제출 요청
                 </Button>
-              </div>
+              ) : (
+                <Button
+                  type="button"
+                  className="w-full"
+                  disabled={isGradeButtonDisabled}
+                  onClick={handleGrade}
+                >
+                  {isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  채점 완료
+                </Button>
+              )}
             </div>
           </Form>
         </section>

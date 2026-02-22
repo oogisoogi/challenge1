@@ -8,7 +8,10 @@ export const createAssignmentBodySchema = z.object({
   courseId: z.string().uuid('유효한 코스를 선택해주세요.'),
   title: z.string().min(1, '제목을 입력해주세요.'),
   description: z.string().default(''),
-  dueDate: z.string().min(1, '마감일을 입력해주세요.'),
+  dueDate: z
+    .string()
+    .min(1, '마감일을 입력해주세요.')
+    .refine((val) => new Date(val) > new Date(), '마감일은 미래 날짜여야 합니다.'),
   weight: z
     .number()
     .int()

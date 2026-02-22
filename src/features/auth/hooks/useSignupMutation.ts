@@ -11,21 +11,17 @@ import {
   type SignupResponse,
 } from '@/features/auth/lib/dto';
 
+const createSession = async (email: string, password: string) => {
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error('세션 생성에 실패했습니다.');
+};
+
 const signupFetcher = async (params: SignupRequest): Promise<SignupResponse> => {
   try {
     const { data } = await apiClient.post('/api/auth/signup', params);
     const result = signupResponseSchema.parse(data);
-
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: params.email,
-      password: params.password,
-    });
-
-    if (error) {
-      throw new Error('세션 생성에 실패했습니다.');
-    }
-
+    await createSession(params.email, params.password);
     return result;
   } catch (error) {
     const message = extractApiErrorMessage(error, '회원가입에 실패했습니다.');
